@@ -47,7 +47,7 @@ python3 YouTubeDown.py -p <YouTube playlist link>
 
 Any advise for common problems or issues.
 ```
-command to run if program contains helper info
+python3 YouTubeDown.py -h
 ```
 
 ## Authors
