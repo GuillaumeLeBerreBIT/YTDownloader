@@ -2,6 +2,8 @@
 
 This is a simple YouTube downloader application created using Python and the Tkinter library.
 
+![YTD](images/Example_View.png)
+
 ## Getting Started
 
 To use the application, follow these steps:
@@ -27,7 +29,7 @@ To use the application, follow these steps:
 4. Run the application:
 
    ```
-   python your_app_file.py
+   python main.py
    ```
 
 ## Features
@@ -52,10 +54,6 @@ To use the application, follow these steps:
 4. Click the "Select Directory" button to choose the download directory.
 5. Click the "Download" button to start the download.
 6. Monitor the download progress in the progress bar and percentage label.
-
-## Screenshots
-
-[Include screenshots or GIFs of your application in action.]
 
 ## Acknowledgments
 
