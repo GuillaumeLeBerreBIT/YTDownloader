@@ -185,9 +185,9 @@ class App(ctk.CTk):
                     self.pPerc_label.configure(text = f'{str(int(tot_per))} %')
                     self.progressbar.set(float(tot_per / 100))
                 
-                    #Schedule the next update after 100 milliseconds
+                    # Schedule the next update after 100 milliseconds
                     self.after(100, update_progress)
-            #Call the function once then it will update automatically
+            # Call the function once then it will update automatically
             update_progress()
                 
         except:
