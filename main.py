@@ -4,6 +4,7 @@ import customtkinter as ctk
 from pytube import YouTube, Playlist
 from PIL import Image, ImageTk
 import os
+from moviepy.editor import *
 
 ctk.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
 ctk.set_default_color_theme("blue")
@@ -23,8 +24,7 @@ class App(ctk.CTk):
         # Place the 2 frames on the master window
         self.frame_picture.place(x = 0, y = 0, relwidth = 0.3, relheight = 1)
         self.frame_download.place(relx = 0.3, y = 0, relwidth = 0.7, relheight = 1)
-        
-        
+             
         # How to add an image onto the window
         self.canvas_for_image = tk.Canvas(master = self.frame_picture, bg = 'red', width = 1024, height = 1024, highlightthickness = 0)
         self.canvas_for_image.pack()
@@ -47,8 +47,21 @@ class App(ctk.CTk):
         self.current_dir = os.getcwd()
         self.dir_label = ctk.CTkLabel(master = self.frame_download, text = f"{self.current_dir}", fg_color="#343638", corner_radius = 32)
         self.dir_label.grid(row = 2, column = 0, columnspan = 2, sticky = "ew", padx = 50)
+        
+        # Button to select the directory want to download the MP4/MP3 files
         self.dir_button = ctk.CTkButton(master = self.frame_download, text = 'Select Directory', command = self.get_directory)
-        self.dir_button.grid(row = 3, column = 0, columnspan = 2, sticky = "ew", padx = 140)
+        self.dir_button.grid(row = 3, column = 0, sticky = "ew", padx = 50)
+        
+        # Using a stringvariable to check the value of the box
+        self.check_audio_var = ctk.StringVar(value = 'MP3')
+        # The checkbox for converting the MP4 to MP3 file or not
+        self.convert_audio = ctk.CTkCheckBox(master = self.frame_download, 
+                                             text = 'MP3-File',
+                                             variable = self.check_audio_var,
+                                             onvalue = 'MP3',
+                                             offvalue = 'MP4', 
+                                             text_color = '#343638')
+        self.convert_audio.grid(row = 3, column = 1, sticky = "ew", padx = 50)
         
         #If want to change how radio buttons are shown need to adjust the avoe which the dir label is far too long
         self.radio_var = tk.StringVar()  # Will convert any type of variable into a string
@@ -64,7 +77,7 @@ class App(ctk.CTk):
                                 value = 'Playlist',
                                 variable = self.radio_var,   # Setting the same tk variable for 2nd radio button
                                 text_color = '#343638')
-        self.download_playlist_btn.grid(row = 4, column = 1)
+        self.download_playlist_btn.grid(row = 4, column = 1,sticky = "ew")
 
         self.download_button = ctk.CTkButton(master = self.frame_download, text = 'Download', command = lambda: self.get_url())
         self.download_button.grid(row = 5, column = 0, columnspan = 2, sticky = "ew", padx = 140)
@@ -81,13 +94,15 @@ class App(ctk.CTk):
     
     
     def get_directory(self):
+        # This will open an interactive window where can select the folder want to use to store the files
         filepath = filedialog.askdirectory(initialdir = f"{self.current_dir}", title = "Select direcotry to save downloaded content")
+        # Change the label and the current directory to save the content
         self.dir_label.configure(text = f'{filepath}')
         self.current_dir = filepath
         
         
     def get_url(self):
-        
+        # Check the Radio button to see wether to download a single video or a playlist containing multiple videos
         if self.radio_var.get() == 'Stream':
             # Download the video link
             self.download_vid(self.url_entry.get())
@@ -99,22 +114,32 @@ class App(ctk.CTk):
         # This is to create a YouTube object
         yt = YouTube(link, 
                 on_progress_callback = self.on_progress,  # This is to work with a progress bar
-                #on_complete_callback = complete_func  # After fully downlaoded post-download processing
                 )
         # Link to the URL saved in a variable
         thumbnail = yt.thumbnail_url # Removing everything after '?' results in original image
+        # Folder path to the video file location
+        video_file_path = f"{self.current_dir}/{yt.title}.mp4"
+
+        # Folder path to the audio file location
+        audio_file_path = f"{self.current_dir}/{yt.title}.mp3"
         
         try: 
             # Get the highest resolution
-            yt = yt.streams.get_highest_resolution()
+            stream = yt.streams.get_highest_resolution()
             
             self.finish_label.configure(text = f'{yt.title}', fg_color="#343638", corner_radius = 32)
             # Download the video
-            yt.download(f'{self.current_dir}')
-            
-        
+            stream.download(f'{self.current_dir}')
+
+            # If the checkbox is checked then want the MP3 audio file
+            if self.check_audio_var.get() == 'MP3':
+                # Convert the MP4 file to an MP3 file
+                self.convert_video_to_audio(video_file_path, audio_file_path)
+                # Remove the MP4 file
+                os.remove(video_file_path)
+             
         except:
-            self.finish_label.configure(text = 'There has been error downloading!', fg_color="#343638", corner_radius = 32)
+            self.finish_label.configure(text = 'There has been error downloading!', fg_color="#343638", corner_radius = 32) 
     
     def download_playlist(self, link):
         # This is to create a YouTube Object
@@ -132,12 +157,27 @@ class App(ctk.CTk):
                 if vid_count < total_vids:
                     
                     video = p.videos[vid_count]
+                    
+                    # Folder path to the video file location
+                    video_file_path = f"{self.current_dir}/{video.title}.mp4"
+
+                    # Folder path to the audio file location
+                    audio_file_path = f"{self.current_dir}/{video.title}.mp3"
+                    
                     # Get the highest stream
                     yt_stream = video.streams.get_highest_resolution()
                     # Change the label to title of video being downloaded
                     self.finish_label.configure(text = f'{video.title}', fg_color="#343638", corner_radius = 32)
                     # Downlaod the video
                     yt_stream.download(f'{self.current_dir}')
+                    
+                    # If the checkbox is checked then want the MP3 audio file
+                    if self.check_audio_var.get() == 'MP3':
+                        # Convert the MP4 file to an MP3 file
+                        self.convert_video_to_audio(video_file_path, audio_file_path)
+                        # Remove the MP4 file
+                        os.remove(video_file_path)
+                        
                     # Once download done increment counter
                     vid_count += 1
 
@@ -147,7 +187,7 @@ class App(ctk.CTk):
                 
                     #Schedule the next update after 100 milliseconds
                     self.after(100, update_progress)
-            
+            #Call the function once then it will update automatically
             update_progress()
                 
         except:
@@ -169,7 +209,12 @@ class App(ctk.CTk):
         # The progress bar part >> Value between 0 and 1
         self.progressbar.set(float(perc_complete / 100))
     
-    
+    def convert_video_to_audio(self, mp4, mp3):
+        # Save the MP4 file in a variable, use a function to convert to MP3 >> Close the MP4 file
+        file_to_convert = AudioFileClip(mp4)
+        file_to_convert.write_audiofile(mp3)
+        file_to_convert.close()
+  
 if __name__ == "__main__":      
     app = App()
     app.mainloop()
