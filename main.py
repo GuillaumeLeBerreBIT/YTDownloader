@@ -1,7 +1,7 @@
 import tkinter as tk 
 from tkinter import filedialog
 import customtkinter as ctk
-from pytube import YouTube, Playlist
+from pytubefix import YouTube, Playlist
 from PIL import Image, ImageTk
 import os
 from moviepy.editor import *
