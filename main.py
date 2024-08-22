@@ -5,6 +5,7 @@ from pytubefix import YouTube, Playlist
 from PIL import Image, ImageTk
 import os
 from moviepy.editor import *
+import time
 
 ctk.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
 ctk.set_default_color_theme("blue")
@@ -115,31 +116,40 @@ class App(ctk.CTk):
         yt = YouTube(link, 
                 on_progress_callback = self.on_progress,  # This is to work with a progress bar
                 )
-        # Link to the URL saved in a variable
-        thumbnail = yt.thumbnail_url # Removing everything after '?' results in original image
+        # Video title
+        mp4_title = f"{yt.title}.mp4"
+        # Rename it to simple string
+        renamed_title = "VideoConvertToMP3.mp4"
         # Folder path to the video file location
-        video_file_path = f"{self.current_dir}/{yt.title}.mp4"
-
+        video_file_path = os.path.join(self.current_dir, mp4_title)
+        renamed_video_file_path = os.path.join(self.current_dir, renamed_title)
         # Folder path to the audio file location
-        audio_file_path = f"{self.current_dir}/{yt.title}.mp3"
+        audio_file_path = os.path.join(self.current_dir, f"{yt.title}.mp3")
         
-        try: 
-            # Get the highest resolution
-            stream = yt.streams.get_highest_resolution()
+        #try: 
             
-            self.finish_label.configure(text = f'{yt.title}', fg_color="#343638", corner_radius = 32)
-            # Download the video
-            stream.download(f'{self.current_dir}')
+        # Get the highest resolution
+        stream = yt.streams.get_highest_resolution()
+        
+        self.finish_label.configure(text = f'{yt.title}', fg_color="#343638", corner_radius = 32)
+        # Download the video
+        stream.download(output_path=f'{self.current_dir}', filename=mp4_title)
+        
+        time.sleep(5)
+        
+        # If the checkbox is checked then want the MP3 audio file
+        if self.check_audio_var.get() == 'MP3':
+            # Rename the video file 
+            if os.path.exists(video_file_path):
+                os.rename(video_file_path, renamed_video_file_path)
+            print(renamed_video_file_path)
+            # Convert the MP4 file to an MP3 file
+            self.convert_video_to_audio(renamed_video_file_path, audio_file_path)
+            # Remove the MP4 file
+            os.remove(renamed_video_file_path)
 
-            # If the checkbox is checked then want the MP3 audio file
-            if self.check_audio_var.get() == 'MP3':
-                # Convert the MP4 file to an MP3 file
-                self.convert_video_to_audio(video_file_path, audio_file_path)
-                # Remove the MP4 file
-                os.remove(video_file_path)
-             
-        except:
-            self.finish_label.configure(text = 'There has been error downloading!', fg_color="#343638", corner_radius = 32) 
+        #except:
+        #    self.finish_label.configure(text = 'There has been error downloading!', fg_color="#343638", corner_radius = 32) 
     
     def download_playlist(self, link):
         # This is to create a YouTube Object
